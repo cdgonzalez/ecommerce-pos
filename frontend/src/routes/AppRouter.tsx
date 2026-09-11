@@ -4,9 +4,7 @@ import Home from '../pages/Home';
 import NotFound from '../pages/NotFound';
 import Login from '../features/auth/Login';
 import ProtectedRoute from './ProtectedRoute';
-
-// Componente temporal para validar acceso protegido
-const Dashboard = () => <div className="p-8 text-xl font-bold">Secure Dashboard Area</div>;
+import UsersList from '../features/admin/UserLists';
 
 const router = createBrowserRouter([
   {
@@ -26,7 +24,7 @@ const router = createBrowserRouter([
     path: '/',
     element: <ProtectedRoute />,
     children: [
-      { path: 'dashboard', element: <Dashboard /> }
+      { path: 'admin/users', element: <UsersList /> }
     ]
   }
 ]);
