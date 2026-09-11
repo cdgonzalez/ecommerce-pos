@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import logger from './core/utils/logger';
 import { errorHandler } from './core/middlewares/error.middleware';
 import { AppError } from './core/utils/AppError';
+import authRoutes from './modules/auth/auth.routes';
 
 const app: Application = express();
 
@@ -32,6 +33,8 @@ app.use(morgan(morganFormat, {
 
 // V1 Router Prefix Setup
 const v1Router = express.Router();
+
+v1Router.use('/auth', authRoutes);
 
 // Health Check Endpoint
 v1Router.get('/health', (_req: Request, res: Response) => {
