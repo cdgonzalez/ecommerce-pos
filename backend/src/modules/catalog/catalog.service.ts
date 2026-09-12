@@ -34,8 +34,17 @@ export class CatalogService {
     }
 
     return prisma.product.create({
-      data: { ...data, slug },
-      include: { category: true, brand: true }
+      data: {
+        ...data,
+        slug,
+        inventory: {
+          create: {
+            quantity: 0,
+            minStock: 5,
+          },
+        },
+      },
+      include: { category: true, brand: true, inventory: true },
     });
   }
 

@@ -34,7 +34,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
 
 export const getProductBySlug = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const product = await catalogService.getProductBySlug(req.params.slug);
+    const product = await catalogService.getProductBySlug(req.params.slug as string);
     res.status(200).json({ status: 'success', data: product });
   } catch (error) {
     next(error);

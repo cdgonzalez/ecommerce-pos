@@ -8,6 +8,7 @@ import { AppError } from './core/utils/AppError';
 import authRoutes from './modules/auth/auth.routes';
 import usersRoutes from './modules/users/users.routes';
 import catalogRoutes from './modules/catalog/catalog.routes';
+import inventoryRoutes from './modules/inventory/inventory.routes';
 
 const app: Application = express();
 
@@ -39,6 +40,7 @@ const v1Router = express.Router();
 v1Router.use('/auth', authRoutes);
 v1Router.use('/users', usersRoutes);
 v1Router.use('/catalog', catalogRoutes);
+v1Router.use('/inventory', inventoryRoutes);
 
 // Health Check Endpoint
 v1Router.get('/health', (_req: Request, res: Response) => {

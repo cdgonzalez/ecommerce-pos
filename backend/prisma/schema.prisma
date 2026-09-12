@@ -88,19 +88,47 @@ model Brand {
 }
 
 model Product {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   name        String
-  slug        String   @unique
+  slug        String     @unique
   description String
-  sku         String   @unique
-  price       Decimal  @db.Decimal(10, 2)
-  status      String   @default("ACTIVE") // ACTIVE, DRAFT, ARCHIVED
+  sku         String     @unique
+  price       Decimal    @db.Decimal(10, 2)
+  status      String     @default("ACTIVE")
   categoryId  String
   brandId     String?
-  category    Category @relation(fields: [categoryId], references: [id])
-  brand       Brand?   @relation(fields: [brandId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  category    Category   @relation(fields: [categoryId], references: [id])
+  brand       Brand?     @relation(fields: [brandId], references: [id])
+  inventory   Inventory?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@map("products")
+}
+
+model Inventory {
+  id        String          @id @default(uuid())
+  productId String          @unique
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int             @default(0)
+  minStock  Int             @default(5)
+  maxStock  Int?
+  movements StockMovement[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@map("inventories")
+}
+
+model StockMovement {
+  id          String    @id @default(uuid())
+  inventoryId String
+  inventory   Inventory @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+  type        String    // 'IN', 'OUT', 'ADJUST'
+  quantity    Int       // Cantidad del movimiento (absoluta)
+  reason      String?   // Ej: "Compra a proveedor", "Merma", "Venta #123"
+  userId      String?   // Auditoría: Quién hizo el movimiento
+  createdAt   DateTime  @default(now())
+
+  @@map("stock_movements")
 }
