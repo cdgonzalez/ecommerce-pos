@@ -5,6 +5,7 @@ import NotFound from '../pages/NotFound';
 import Login from '../features/auth/Login';
 import ProtectedRoute from './ProtectedRoute';
 import UsersList from '../features/admin/UserLists';
+import ProductDetail from '../features/products/ProductDetail';
 
 const router = createBrowserRouter([
   {
@@ -13,6 +14,7 @@ const router = createBrowserRouter([
     errorElement: <NotFound />,
     children: [
       { index: true, element: <Home /> },
+      { path: 'products/:slug', element: <ProductDetail /> }
     ],
   },
   {
