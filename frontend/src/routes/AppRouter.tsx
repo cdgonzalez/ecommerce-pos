@@ -12,6 +12,7 @@ import CartPage from '../features/cart/CartPage';
 import CheckoutPage from '../features/checkout/CheckoutPage';
 import POSLayout from '../layouts/POSLayout';
 import POSPage from '../features/pos/POSPage';
+import TransactionsHistory from '../features/admin/TransactionHistory';
 
 const router = createBrowserRouter([
   {
@@ -44,7 +45,8 @@ const router = createBrowserRouter([
     children: [
       { path: 'admin/users', element: <UsersList /> },
       { path: 'admin/inventory', element: <InventoryList /> },
-      { path: 'admin/customers', element: <CustomersList /> }
+      { path: 'admin/customers', element: <CustomersList /> },
+      { path: 'admin/transactions', element: <TransactionsHistory /> }
     ]
   },
   // TERMINAL POS ROUTES

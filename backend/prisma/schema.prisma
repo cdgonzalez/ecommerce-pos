@@ -206,6 +206,7 @@ model Sale {
   cashier    User       @relation(fields: [cashierId], references: [id])
   customerId String?
   customer   Customer?  @relation(fields: [customerId], references: [id])
+  status     String     @default("COMPLETED") // COMPLETED, REFUNDED
   subtotal   Decimal    @db.Decimal(10, 2)
   taxes      Decimal    @db.Decimal(10, 2)
   total      Decimal    @db.Decimal(10, 2)
