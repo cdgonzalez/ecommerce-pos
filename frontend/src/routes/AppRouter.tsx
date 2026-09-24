@@ -9,6 +9,7 @@ import ProductDetail from '../features/products/ProductDetail';
 import InventoryList from '../features/admin/InventoryList';
 import CustomersList from '../features/admin/CustomersList';
 import CartPage from '../features/cart/CartPage';
+import CheckoutPage from '../features/checkout/CheckoutPage';
 
 const router = createBrowserRouter([
   {
@@ -18,7 +19,16 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'products/:slug', element: <ProductDetail /> },
-      { path: 'cart', element: <CartPage /> }
+      { path: 'cart', element: <CartPage /> },
+
+      // Rutas de cliente protegido (E-Commerce B2C)
+      {
+        path: '/',
+        element: <ProtectedRoute />, // Requiere AuthStore.isAuthenticated
+        children: [
+          { path: 'checkout', element: <CheckoutPage /> } // <--- AGREGADO
+        ]
+      }
     ],
   },
   {
