@@ -30,3 +30,24 @@ export const getCustomerById = async (req: Request, res: Response, next: NextFun
     next(error);
   }
 };
+
+// NUEVO: Controladores B2C
+export const getMyProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.id;
+    const profile = await customersService.getMyProfile(userId);
+    res.status(200).json({ status: 'success', data: profile });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateMyProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user!.id;
+    const updatedProfile = await customersService.updateMyProfile(userId, req.body);
+    res.status(200).json({ status: 'success', data: updatedProfile });
+  } catch (error) {
+    next(error);
+  }
+};

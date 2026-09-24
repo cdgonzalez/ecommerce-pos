@@ -1,10 +1,12 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
-import { Store, ShoppingCart } from 'lucide-react';
+import { Store, ShoppingCart, UserCircle } from 'lucide-react'; // <--- Icono UserCircle añadido
 import { useCartStore } from '../store/cart.store';
+import { useAuthStore } from '../store/auth.store'; // <--- Importar Auth Store
 
 const MainLayout: React.FC = () => {
   const totalItems = useCartStore((state) => state.getTotalItems());
+  const { isAuthenticated, user, logout } = useAuthStore(); // <--- Obtener estado de sesión
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -25,9 +27,23 @@ const MainLayout: React.FC = () => {
                   </span>
                 )}
               </Link>
-              <Link to="/login" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors">
-                Sign In
-              </Link>
+
+              {/* Botonera de Usuario Dinámica */}
+              {isAuthenticated ? (
+                <div className="flex items-center gap-4">
+                  <Link to="/account" className="flex items-center gap-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors">
+                    <UserCircle className="w-5 h-5" />
+                    <span>Hi, {user?.name.split(' ')[0]}</span>
+                  </Link>
+                  <button onClick={logout} className="text-sm font-medium text-gray-500 hover:text-red-600">
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <Link to="/login" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors">
+                  Sign In
+                </Link>
+              )}
             </div>
           </div>
         </div>

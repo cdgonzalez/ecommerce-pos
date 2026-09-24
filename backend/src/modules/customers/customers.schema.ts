@@ -18,4 +18,13 @@ export const createCustomerSchema = z.object({
   addresses: z.array(addressSchema).optional()
 });
 
+// NUEVO: Esquema para actualización del propio perfil del cliente web
+export const updateMyProfileSchema = z.object({
+  firstName: z.string().min(2).optional(),
+  lastName: z.string().min(2).optional(),
+  phone: z.string().min(8).optional(),
+  address: addressSchema.optional()
+});
+
 export type CreateCustomerDTO = z.infer<typeof createCustomerSchema>;
+export type UpdateMyProfileDTO = z.infer<typeof updateMyProfileSchema>;

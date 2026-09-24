@@ -13,6 +13,7 @@ import CheckoutPage from '../features/checkout/CheckoutPage';
 import POSLayout from '../layouts/POSLayout';
 import POSPage from '../features/pos/POSPage';
 import TransactionsHistory from '../features/admin/TransactionHistory';
+import CustomerAccount from '../features/account/CustomerAccount';
 
 const router = createBrowserRouter([
   {
@@ -29,7 +30,8 @@ const router = createBrowserRouter([
         path: '/',
         element: <ProtectedRoute />,
         children: [
-          { path: 'checkout', element: <CheckoutPage /> }
+          { path: 'checkout', element: <CheckoutPage /> },
+          { path: 'account', element: <CustomerAccount /> }
         ]
       }
     ],
