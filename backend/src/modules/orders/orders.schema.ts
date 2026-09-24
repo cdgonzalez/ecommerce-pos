@@ -7,6 +7,7 @@ const orderItemSchema = z.object({
 
 export const createOrderSchema = z.object({
   shippingAddress: z.string().min(10, "A complete shipping address is required"),
+  paymentMethod: z.enum(["CREDIT_CARD", "DEBIT_CARD", "TRANSFER", "DIGITAL"], "Payment method is required"),
   items: z.array(orderItemSchema).min(1, "Order must contain at least one item"),
 });
 

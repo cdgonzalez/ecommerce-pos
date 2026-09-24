@@ -9,7 +9,6 @@ export class OrdersService {
       const orderItemsData = [];
 
       for (const item of data.items) {
-        // 1. Obtener el producto y su inventario actual
         const product = await tx.product.findUnique({
           where: { id: item.productId },
           include: { inventory: true }
@@ -19,7 +18,6 @@ export class OrdersService {
           throw new AppError(`Product ${item.productId} is unavailable`, 400);
         }
 
-        // 2. Verificar y descontar inventario atómicamente
         if (!product.inventory || product.inventory.quantity < item.quantity) {
           throw new AppError(`Insufficient stock for ${product.name}`, 400);
         }
@@ -33,7 +31,6 @@ export class OrdersService {
           throw new AppError(`Concurrency error: Insufficient stock for ${product.name}`, 409);
         }
 
-        // Registrar movimiento de stock por la venta
         await tx.stockMovement.create({
           data: {
             inventoryId: product.inventory.id,
@@ -44,7 +41,6 @@ export class OrdersService {
           }
         });
 
-        // 3. Preparar el snapshot del OrderItem
         const unitPrice = Number(product.price);
         const totalPrice = unitPrice * item.quantity;
         subtotal += totalPrice;
@@ -59,15 +55,14 @@ export class OrdersService {
         });
       }
 
-      // 4. Calcular totales
-      const taxes = subtotal * 0.16; // 16% IVA
+      const taxes = subtotal * 0.16;
       const total = subtotal + taxes;
 
-      // 5. Crear la orden y sus ítems
+      // 1. Crear Orden con estatus PROCESSING (El pago se asume exitoso síncronamente)
       const order = await tx.order.create({
         data: {
           userId,
-          status: 'PENDING',
+          status: 'PROCESSING', 
           subtotal,
           taxes,
           total,
@@ -76,17 +71,30 @@ export class OrdersService {
             create: orderItemsData
           }
         },
-        include: { items: true }
       });
 
-      return order;
+      // 2. Registrar el cobro en la entidad Payments vinculada a la Orden
+      await tx.payment.create({
+        data: {
+          orderId: order.id,
+          amount: total,
+          method: data.paymentMethod,
+          status: 'COMPLETED',
+          reference: `WEB-${Date.now()}` // Mock de ID de transacción de pasarela
+        }
+      });
+
+      return await tx.order.findUnique({
+        where: { id: order.id },
+        include: { items: true, payments: true }
+      });
     });
   }
 
   async getUserOrders(userId: string) {
     return prisma.order.findMany({
       where: { userId },
-      include: { items: true },
+      include: { items: true, payments: true },
       orderBy: { createdAt: 'desc' }
     });
   }

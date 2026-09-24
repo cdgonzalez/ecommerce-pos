@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { CheckCircle, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { CheckCircle, AlertTriangle, ShieldCheck, CreditCard, Building, Smartphone } from 'lucide-react';
 import { useCartStore } from '../../store/cart.store';
 import apiClient from '../../services/api/axios.client';
 
@@ -9,11 +9,11 @@ const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   
   const [address, setAddress] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'CREDIT_CARD' | 'TRANSFER' | 'DIGITAL'>('CREDIT_CARD');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  // Redirigir si el carrito está vacío
   if (items.length === 0 && !success) {
     return <Navigate to="/cart" replace />;
   }
@@ -30,6 +30,7 @@ const CheckoutPage: React.FC = () => {
     try {
       const payload = {
         shippingAddress: address,
+        paymentMethod: paymentMethod,
         items: items.map(i => ({ productId: i.productId, quantity: i.quantity }))
       };
 
@@ -47,8 +48,8 @@ const CheckoutPage: React.FC = () => {
     return (
       <div className="max-w-2xl mx-auto mt-16 text-center bg-white p-12 rounded-xl shadow-sm border border-gray-200">
         <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
-        <h1 className="text-3xl font-extrabold text-gray-900 mb-4">Order Placed Successfully!</h1>
-        <p className="text-gray-600 mb-8">Thank you for your purchase. We are preparing your order for shipment.</p>
+        <h1 className="text-3xl font-extrabold text-gray-900 mb-4">Payment Successful!</h1>
+        <p className="text-gray-600 mb-8">Your order has been placed and is currently being processed.</p>
         <button 
           onClick={() => navigate('/')}
           className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-md transition-colors"
@@ -71,25 +72,46 @@ const CheckoutPage: React.FC = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Shipping Information</h2>
-          <form id="checkout-form" onSubmit={handlePlaceOrder}>
+        <form id="checkout-form" onSubmit={handlePlaceOrder}>
+          {/* Section 1: Address */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">1. Shipping Information</h2>
             <div className="mb-4">
               <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Full Delivery Address</label>
               <textarea
-                id="address"
-                required
-                rows={3}
+                id="address" required rows={3}
                 className="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="123 Main St, Apt 4B, City, Country, ZIP"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                placeholder="123 Main St, City, Country"
+                value={address} onChange={(e) => setAddress(e.target.value)}
               />
             </div>
-          </form>
-        </div>
+          </div>
+
+          {/* Section 2: Payment Method */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">2. Payment Method</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <label className={`border rounded-lg p-4 flex flex-col items-center gap-2 cursor-pointer transition-colors ${paymentMethod === 'CREDIT_CARD' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <input type="radio" name="payment" value="CREDIT_CARD" checked={paymentMethod === 'CREDIT_CARD'} onChange={() => setPaymentMethod('CREDIT_CARD')} className="sr-only" />
+                <CreditCard className="w-6 h-6" />
+                <span className="font-medium text-sm">Credit Card</span>
+              </label>
+              <label className={`border rounded-lg p-4 flex flex-col items-center gap-2 cursor-pointer transition-colors ${paymentMethod === 'DIGITAL' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <input type="radio" name="payment" value="DIGITAL" checked={paymentMethod === 'DIGITAL'} onChange={() => setPaymentMethod('DIGITAL')} className="sr-only" />
+                <Smartphone className="w-6 h-6" />
+                <span className="font-medium text-sm">PayPal / Digital</span>
+              </label>
+              <label className={`border rounded-lg p-4 flex flex-col items-center gap-2 cursor-pointer transition-colors ${paymentMethod === 'TRANSFER' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 hover:bg-gray-50'}`}>
+                <input type="radio" name="payment" value="TRANSFER" checked={paymentMethod === 'TRANSFER'} onChange={() => setPaymentMethod('TRANSFER')} className="sr-only" />
+                <Building className="w-6 h-6" />
+                <span className="font-medium text-sm">Bank Transfer</span>
+              </label>
+            </div>
+          </div>
+        </form>
       </div>
 
+      {/* Right Column: Order Summary (Mismo componente estructural) */}
       <div className="lg:col-span-4">
         <div className="bg-gray-50 rounded-lg border border-gray-200 p-6 sticky top-24">
           <h2 className="text-lg font-bold text-gray-900 mb-4">Order Summary</h2>
@@ -103,29 +125,18 @@ const CheckoutPage: React.FC = () => {
           </div>
           
           <div className="border-t border-gray-200 pt-4 space-y-2 text-sm">
-            <div className="flex justify-between text-gray-600">
-              <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-gray-600">
-              <span>Taxes (16%)</span>
-              <span>${taxes.toFixed(2)}</span>
-            </div>
+            <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
+            <div className="flex justify-between text-gray-600"><span>Taxes (16%)</span><span>${taxes.toFixed(2)}</span></div>
             <div className="flex justify-between text-lg font-extrabold text-gray-900 pt-2 border-t border-gray-200 mt-2">
-              <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>Total</span><span>${total.toFixed(2)}</span>
             </div>
           </div>
 
           <button
-            type="submit"
-            form="checkout-form"
-            disabled={isProcessing}
+            type="submit" form="checkout-form" disabled={isProcessing}
             className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-md transition-colors flex justify-center items-center gap-2 disabled:bg-green-400"
           >
-            {isProcessing ? 'Processing...' : (
-              <><ShieldCheck className="w-5 h-5" /> Place Order</>
-            )}
+            {isProcessing ? 'Processing...' : <><ShieldCheck className="w-5 h-5" /> Pay Now</>}
           </button>
         </div>
       </div>

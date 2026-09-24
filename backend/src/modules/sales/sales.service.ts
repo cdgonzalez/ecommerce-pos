@@ -22,7 +22,6 @@ export class SalesService {
           throw new AppError(`Insufficient stock for ${product.name}`, 400);
         }
 
-        // Deducción atómica
         const updatedInventory = await tx.inventory.update({
           where: { productId: product.id },
           data: { quantity: { decrement: item.quantity } }
@@ -32,7 +31,6 @@ export class SalesService {
           throw new AppError(`Concurrency error: Insufficient stock for ${product.name}`, 409);
         }
 
-        // Registrar movimiento del POS
         await tx.stockMovement.create({
           data: {
             inventoryId: product.inventory.id,
@@ -57,7 +55,7 @@ export class SalesService {
         });
       }
 
-      const taxes = subtotal * 0.16; // IVA genérico
+      const taxes = subtotal * 0.16;
       const total = subtotal + taxes;
 
       const sale = await tx.sale.create({
@@ -70,11 +68,24 @@ export class SalesService {
           items: {
             create: saleItemsData
           }
-        },
-        include: { items: true, customer: true }
+        }
       });
 
-      return sale;
+      // Crear el registro del pago vinculado al Ticket de Venta
+      await tx.payment.create({
+        data: {
+          saleId: sale.id,
+          amount: total,
+          method: data.paymentMethod,
+          status: 'COMPLETED',
+          reference: data.paymentMethod === 'CASH' ? null : `POS-${Date.now()}`
+        }
+      });
+
+      return await tx.sale.findUnique({
+        where: { id: sale.id },
+        include: { items: true, customer: true, payments: true }
+      });
     });
   }
 
@@ -83,7 +94,8 @@ export class SalesService {
       take: limit,
       include: { 
         cashier: { select: { name: true } },
-        customer: { select: { firstName: true, lastName: true } }
+        customer: { select: { firstName: true, lastName: true } },
+        payments: { select: { method: true, amount: true } }
       },
       orderBy: { createdAt: 'desc' }
     });

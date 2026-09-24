@@ -7,6 +7,7 @@ const saleItemSchema = z.object({
 
 export const createSaleSchema = z.object({
   customerId: z.string().uuid("Invalid Customer ID").optional().nullable(),
+  paymentMethod: z.enum(['CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'TRANSFER', 'DIGITAL'], "Payment method is required"),
   items: z.array(saleItemSchema).min(1, "Sale must contain at least one item"),
 });
 

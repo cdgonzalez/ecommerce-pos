@@ -178,6 +178,7 @@ model Order {
   total           Decimal     @db.Decimal(10, 2)
   shippingAddress String
   items           OrderItem[]
+  payments        Payment[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -190,7 +191,6 @@ model OrderItem {
   order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId   String
   product     Product @relation(fields: [productId], references: [id])
-  // Snapshots (Inmutables histórico)
   productName String
   sku         String
   unitPrice   Decimal @db.Decimal(10, 2)
@@ -210,6 +210,7 @@ model Sale {
   taxes      Decimal    @db.Decimal(10, 2)
   total      Decimal    @db.Decimal(10, 2)
   items      SaleItem[]
+  payments   Payment[]
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
@@ -231,4 +232,20 @@ model SaleItem {
   totalPrice  Decimal @db.Decimal(10, 2)
 
   @@map("sale_items")
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  saleId    String?
+  sale      Sale?    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  amount    Decimal  @db.Decimal(10, 2)
+  method    String // CASH, CREDIT_CARD, DEBIT_CARD, TRANSFER, DIGITAL
+  status    String   @default("COMPLETED") // PENDING, COMPLETED, FAILED, REFUNDED
+  reference String? // ID de transacción externa
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("payments")
 }
