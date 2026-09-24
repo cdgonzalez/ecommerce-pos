@@ -14,6 +14,7 @@ model User {
   refreshToken String?
   isActive     Boolean    @default(true)
   roles        UserRole[]
+  customer     Customer?  // <--- RELACIÓN AGREGADA
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -131,4 +132,33 @@ model StockMovement {
   createdAt   DateTime  @default(now())
 
   @@map("stock_movements")
+}
+
+model Customer {
+  id          String    @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String?   @unique
+  phone       String?
+  userId      String?   @unique // Opcional: enlace a cuenta de usuario
+  user        User?     @relation(fields: [userId], references: [id])
+  addresses   Address[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("customers")
+}
+
+model Address {
+  id          String    @id @default(uuid())
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  street      String
+  city        String
+  state       String
+  zipCode     String
+  country     String
+  isDefault   Boolean   @default(false)
+
+  @@map("addresses")
 }

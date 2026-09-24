@@ -7,6 +7,7 @@ import ProtectedRoute from './ProtectedRoute';
 import UsersList from '../features/admin/UserLists';
 import ProductDetail from '../features/products/ProductDetail';
 import InventoryList from '../features/admin/InventoryList';
+import CustomersList from '../features/admin/CustomersList';
 
 const router = createBrowserRouter([
   {
@@ -28,7 +29,8 @@ const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       { path: 'admin/users', element: <UsersList /> },
-      { path: 'admin/inventory', element: <InventoryList /> }
+      { path: 'admin/inventory', element: <InventoryList /> },
+      { path: 'admin/customers', element: <CustomersList /> }
     ]
   }
 ]);

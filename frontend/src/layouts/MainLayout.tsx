@@ -17,9 +17,9 @@ const MainLayout: React.FC = () => {
               <Link to="/about" className="text-gray-600 hover:text-gray-900 font-medium">About</Link>
             </nav>
             <div className="flex items-center space-x-4">
-              <button className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors">
+              <Link to="/login" className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors">
                 Sign In
-              </button>
+              </Link>
             </div>
           </div>
         </div>
