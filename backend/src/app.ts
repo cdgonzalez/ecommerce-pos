@@ -12,6 +12,7 @@ import inventoryRoutes from './modules/inventory/inventory.routes';
 import customersRoutes from './modules/customers/customers.routes';
 import cartRoutes from './modules/cart/cart.routes';
 import ordersRoutes from './modules/orders/orders.routes';
+import salesRoutes from './modules/sales/sales.routes';
 
 const app: Application = express();
 
@@ -47,6 +48,7 @@ v1Router.use('/inventory', inventoryRoutes);
 v1Router.use('/customers', customersRoutes);
 v1Router.use('/cart', cartRoutes);
 v1Router.use('/orders', ordersRoutes);
+v1Router.use('/sales', salesRoutes);
 
 // Health Check Endpoint
 v1Router.get('/health', (_req: Request, res: Response) => {

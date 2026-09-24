@@ -10,6 +10,8 @@ import InventoryList from '../features/admin/InventoryList';
 import CustomersList from '../features/admin/CustomersList';
 import CartPage from '../features/cart/CartPage';
 import CheckoutPage from '../features/checkout/CheckoutPage';
+import POSLayout from '../layouts/POSLayout';
+import POSPage from '../features/pos/POSPage';
 
 const router = createBrowserRouter([
   {
@@ -24,9 +26,9 @@ const router = createBrowserRouter([
       // Rutas de cliente protegido (E-Commerce B2C)
       {
         path: '/',
-        element: <ProtectedRoute />, // Requiere AuthStore.isAuthenticated
+        element: <ProtectedRoute />,
         children: [
-          { path: 'checkout', element: <CheckoutPage /> } // <--- AGREGADO
+          { path: 'checkout', element: <CheckoutPage /> }
         ]
       }
     ],
@@ -43,6 +45,20 @@ const router = createBrowserRouter([
       { path: 'admin/users', element: <UsersList /> },
       { path: 'admin/inventory', element: <InventoryList /> },
       { path: 'admin/customers', element: <CustomersList /> }
+    ]
+  },
+  // TERMINAL POS ROUTES
+  {
+    path: '/pos/',
+    element: <ProtectedRoute />,
+    children: [
+      {
+        path: '',
+        element: <POSLayout />,
+        children: [
+          { index: true, element: <POSPage /> },
+        ]
+      }
     ]
   }
 ]);
