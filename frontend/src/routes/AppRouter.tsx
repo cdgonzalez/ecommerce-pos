@@ -8,6 +8,7 @@ import UsersList from '../features/admin/UserLists';
 import ProductDetail from '../features/products/ProductDetail';
 import InventoryList from '../features/admin/InventoryList';
 import CustomersList from '../features/admin/CustomersList';
+import CartPage from '../features/cart/CartPage';
 
 const router = createBrowserRouter([
   {
@@ -16,7 +17,8 @@ const router = createBrowserRouter([
     errorElement: <NotFound />,
     children: [
       { index: true, element: <Home /> },
-      { path: 'products/:slug', element: <ProductDetail /> }
+      { path: 'products/:slug', element: <ProductDetail /> },
+      { path: 'cart', element: <CartPage /> }
     ],
   },
   {
