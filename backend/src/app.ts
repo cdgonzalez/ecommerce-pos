@@ -5,6 +5,9 @@ import morgan from 'morgan';
 import logger from './core/utils/logger';
 import { errorHandler } from './core/middlewares/error.middleware';
 import { AppError } from './core/utils/AppError';
+import { correlationMiddleware } from './core/middlewares/correlation.middleware';
+import prisma from './core/database/prisma.client';
+
 import authRoutes from './modules/auth/auth.routes';
 import usersRoutes from './modules/users/users.routes';
 import catalogRoutes from './modules/catalog/catalog.routes';
@@ -16,6 +19,7 @@ import salesRoutes from './modules/sales/sales.routes';
 import transactionsRoutes from './modules/transactions/transactions.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
 import reportsRoutes from './modules/reports/reports.routes';
+import auditRoutes from './modules/audit/audit.routes';
 
 const app: Application = express();
 
@@ -33,6 +37,9 @@ app.use(cors({
   credentials: true
 }));
 
+// Inyectar correlación antes que cualquier log
+app.use(correlationMiddleware); 
+
 // HTTP Request Logging (derivado a Winston)
 const morganFormat = ':method :url :status :res[content-length] - :response-time ms';
 app.use(morgan(morganFormat, {
@@ -43,6 +50,28 @@ app.use(morgan(morganFormat, {
 
 // V1 Router Prefix Setup
 const v1Router = express.Router();
+
+// DEEP HEALTH CHECK
+v1Router.get('/health', async (_req: Request, res: Response) => {
+  try {
+    // Validar conexión a DB ejecutando query ultra-ligera
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({
+      status: 'success',
+      message: 'System Operational',
+      database: 'connected',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Health Check Failed: Database unreachable');
+    res.status(503).json({
+      status: 'error',
+      message: 'Service Unavailable',
+      database: 'disconnected',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 
 v1Router.use('/auth', authRoutes);
 v1Router.use('/users', usersRoutes);
@@ -55,15 +84,7 @@ v1Router.use('/sales', salesRoutes);
 v1Router.use('/transactions', transactionsRoutes);
 v1Router.use('/dashboard', dashboardRoutes);
 v1Router.use('/reports', reportsRoutes);
-
-// Health Check Endpoint
-v1Router.get('/health', (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'success',
-    message: 'E-Commerce POS API v1 is running',
-    timestamp: new Date().toISOString()
-  });
-});
+v1Router.use('/audit', auditRoutes);
 
 // Registrar router principal
 app.use('/api/v1', v1Router);

@@ -16,6 +16,7 @@ import TransactionsHistory from '../features/admin/TransactionHistory';
 import CustomerAccount from '../features/account/CustomerAccount';
 import AdminDashboard from '../features/admin/AdminDashboard';
 import ReportsView from '../features/admin/ReportsView';
+import AuditLogsView from '../features/admin/AuditLogsView';
 
 const router = createBrowserRouter([
   {
@@ -53,6 +54,7 @@ const router = createBrowserRouter([
       { path: 'customers', element: <CustomersList /> },
       { path: 'transactions', element: <TransactionsHistory /> },
       { path: 'reports', element: <ReportsView /> },
+      { path: 'audit', element: <AuditLogsView /> }
     ]
   },
   // TERMINAL POS ROUTES

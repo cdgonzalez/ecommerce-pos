@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { requestContext } from '../middlewares/correlation.middleware';
 
 const levels = {
   error: 0,
@@ -27,13 +28,17 @@ const format = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
   winston.format.printf(
-    (info) => `${info.timestamp} ${info.level}: ${info.message}`
+    (info) => {
+      // Extraemos el Request ID sin necesidad de pasarlo por argumentos
+      const reqId = requestContext.getStore();
+      const reqIdString = reqId ? `[ReqID: ${reqId}] ` : '';
+      return `${info.timestamp} ${info.level}: ${reqIdString}${info.message}`;
+    }
   )
 );
 
 const transports = [
   new winston.transports.Console(),
-  // En iteraciones futuras, aquí se agregarán File transports para logs de auditoría
 ];
 
 const logger = winston.createLogger({

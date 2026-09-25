@@ -19,6 +19,7 @@ model User {
   updatedAt    DateTime   @updatedAt
   orders       Order[]
   sales        Sale[]
+  auditLogs    AuditLog[]
 
   @@map("users")
 }
@@ -249,4 +250,18 @@ model Payment {
   updatedAt DateTime @updatedAt
 
   @@map("payments")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   // ej. CREATE, UPDATE, DELETE, LOGIN_FAILED
+  entity    String   // ej. USER, PRODUCT, ROLE, INVENTORY
+  entityId  String?  // ID del recurso modificado
+  metadata  Json?    // Snapshot de los cambios o detalles
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
 }
