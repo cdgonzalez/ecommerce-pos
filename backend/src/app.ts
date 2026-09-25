@@ -15,6 +15,7 @@ import ordersRoutes from './modules/orders/orders.routes';
 import salesRoutes from './modules/sales/sales.routes';
 import transactionsRoutes from './modules/transactions/transactions.routes';
 import dashboardRoutes from './modules/dashboard/dashboard.routes';
+import reportsRoutes from './modules/reports/reports.routes';
 
 const app: Application = express();
 
@@ -53,6 +54,7 @@ v1Router.use('/orders', ordersRoutes);
 v1Router.use('/sales', salesRoutes);
 v1Router.use('/transactions', transactionsRoutes);
 v1Router.use('/dashboard', dashboardRoutes);
+v1Router.use('/reports', reportsRoutes);
 
 // Health Check Endpoint
 v1Router.get('/health', (_req: Request, res: Response) => {

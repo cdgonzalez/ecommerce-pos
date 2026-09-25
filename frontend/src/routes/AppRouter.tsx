@@ -15,6 +15,7 @@ import POSPage from '../features/pos/POSPage';
 import TransactionsHistory from '../features/admin/TransactionHistory';
 import CustomerAccount from '../features/account/CustomerAccount';
 import AdminDashboard from '../features/admin/AdminDashboard';
+import ReportsView from '../features/admin/ReportsView';
 
 const router = createBrowserRouter([
   {
@@ -50,7 +51,8 @@ const router = createBrowserRouter([
       { path: 'users', element: <UsersList /> },
       { path: 'inventory', element: <InventoryList /> },
       { path: 'customers', element: <CustomersList /> },
-      { path: 'transactions', element: <TransactionsHistory /> }
+      { path: 'transactions', element: <TransactionsHistory /> },
+      { path: 'reports', element: <ReportsView /> },
     ]
   },
   // TERMINAL POS ROUTES
