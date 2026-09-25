@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import MainLayout from '../layouts/MainLayout';
 import Home from '../pages/Home';
 import NotFound from '../pages/NotFound';
@@ -14,6 +14,7 @@ import POSLayout from '../layouts/POSLayout';
 import POSPage from '../features/pos/POSPage';
 import TransactionsHistory from '../features/admin/TransactionHistory';
 import CustomerAccount from '../features/account/CustomerAccount';
+import AdminDashboard from '../features/admin/AdminDashboard';
 
 const router = createBrowserRouter([
   {
@@ -42,13 +43,14 @@ const router = createBrowserRouter([
   },
   {
     // Grupo de Rutas Protegidas
-    path: '/',
+    path: '/admin',
     element: <ProtectedRoute />,
     children: [
-      { path: 'admin/users', element: <UsersList /> },
-      { path: 'admin/inventory', element: <InventoryList /> },
-      { path: 'admin/customers', element: <CustomersList /> },
-      { path: 'admin/transactions', element: <TransactionsHistory /> }
+      { index: true, element: <AdminDashboard /> },
+      { path: 'users', element: <UsersList /> },
+      { path: 'inventory', element: <InventoryList /> },
+      { path: 'customers', element: <CustomersList /> },
+      { path: 'transactions', element: <TransactionsHistory /> }
     ]
   },
   // TERMINAL POS ROUTES
