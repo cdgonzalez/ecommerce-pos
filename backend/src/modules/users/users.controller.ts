@@ -12,6 +12,15 @@ export const getUsers = async (_req: Request, res: Response, next: NextFunction)
   }
 };
 
+export const getRoles = async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const roles = await usersService.getAllRoles();
+    res.status(200).json({ status: 'success', data: roles });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const newUser = await usersService.createUser(req.body);

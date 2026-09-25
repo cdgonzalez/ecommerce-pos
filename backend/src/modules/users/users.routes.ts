@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getUsers, createUser } from './users.controller';
+import { getUsers, createUser, getRoles } from './users.controller';
 import { protect } from '../../core/middlewares/auth.middleware';
 import { requirePermission } from '../../core/middlewares/rbac.middleware';
 import { validateRequest } from '../../core/middlewares/validate.middleware';
@@ -11,6 +11,7 @@ const router = Router();
 router.use(protect);
 
 // Requiere permiso específico
+router.get('/roles', requirePermission('MANAGE_USERS'), getRoles);
 router.get('/', requirePermission('MANAGE_USERS'), getUsers);
 router.post('/', requirePermission('MANAGE_USERS'), validateRequest(createUserSchema), createUser);
 

@@ -15,6 +15,12 @@ export class UsersService {
     });
   }
 
+  async getAllRoles() {
+    return prisma.role.findMany({
+      select: { id: true, name: true, description: true }
+    });
+  }
+
   async createUser(data: CreateUserDTO, adminId?: string) {
     const existingUser = await prisma.user.findUnique({ where: { email: data.email } });
     if (existingUser) throw new AppError('Email already in use', 409);
