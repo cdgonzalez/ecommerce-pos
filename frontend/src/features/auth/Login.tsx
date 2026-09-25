@@ -23,7 +23,17 @@ const Login: React.FC = () => {
       const { user, accessToken } = response.data.data;
       
       setLogin(user, accessToken);
-      navigate('/dashboard'); // Redirige a una ruta protegida
+      
+      // Enrutamiento Inteligente Basado en Roles
+      const userRoles = user.roles || [];
+      if (userRoles.includes('ADMIN')) {
+        navigate('/admin');
+      } else if (userRoles.includes('CASHIER')) {
+        navigate('/pos');
+      } else {
+        navigate('/'); // Redirigir a Home (E-Commerce)
+      }
+      
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to login');
     } finally {

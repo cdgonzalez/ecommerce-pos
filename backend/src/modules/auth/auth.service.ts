@@ -54,7 +54,10 @@ export class AuthService {
   }
 
   async login(data: LoginDTO) {
-    const user = await prisma.user.findUnique({ where: { email: data.email } });
+    const user = await prisma.user.findUnique({ 
+      where: { email: data.email },
+      include: { roles: { include: { role: true} } } 
+    });
     
     if (!user || !user.isActive) {
       throw new AppError('Invalid credentials or inactive account', 401);
@@ -72,8 +75,11 @@ export class AuthService {
       data: { refreshToken }
     });
 
+    // Extraer nombres de roles en un arreglo simple de strings
+    const userRoles = user.roles.map(ur => ur.role.name);
+
     return {
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, roles: userRoles },
       accessToken,
       refreshToken
     };

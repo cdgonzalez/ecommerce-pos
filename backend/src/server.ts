@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import app from './app';
 import prisma from './core/database/prisma.client';
+import redisClient from './core/cache/redis.client';
 import logger from './core/utils/logger';
 
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,8 @@ const startServer = async () => {
     await prisma.$queryRaw`SELECT 1`; // <-- Obliga a comunicarse con PostgreSQL
     logger.info('📦 Successfully connected to PostgreSQL database');
     
+    await redisClient.connect();
+
     // 2. Iniciar servidor web solo tras conectar a DB
     app.listen(PORT, () => {
       logger.info(`🚀 Server is running in ${process.env.NODE_ENV || 'development'} mode on http://localhost:${PORT}`);
@@ -23,6 +26,7 @@ const startServer = async () => {
     //   logger.error('❌ Database connection failed. Please check your DATABASE_URL in .env and ensure PostgreSQL is running.');
     // }
     await prisma.$disconnect();
+    if (redisClient.isOpen) await redisClient.disconnect();
     process.exit(1);
   }
 };
@@ -32,6 +36,7 @@ startServer();
 // Manejo de cierres limpios (Graceful shutdown)
 process.on('SIGINT', async () => {
   await prisma.$disconnect();
+  if (redisClient.isOpen) await redisClient.disconnect();
   logger.info('Database connection closed due to application termination');
   process.exit(0);
 });
