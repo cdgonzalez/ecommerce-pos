@@ -6,6 +6,7 @@ import logger from './core/utils/logger';
 import { errorHandler } from './core/middlewares/error.middleware';
 import { AppError } from './core/utils/AppError';
 import { correlationMiddleware } from './core/middlewares/correlation.middleware';
+import { globalLimiter } from './core/middlewares/ratelimit.middleware';
 import prisma from './core/database/prisma.client';
 
 import authRoutes from './modules/auth/auth.routes';
@@ -24,17 +25,34 @@ import auditRoutes from './modules/audit/audit.routes';
 const app: Application = express();
 
 // Security HTTP headers
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"], // Necesario para algunas configuraciones de Tailwind/React
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", process.env.CORS_ORIGIN || 'http://localhost:5173'],
+      upgradeInsecureRequests: [],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Permite cargar recursos cruzados si es necesario en el E-Commerce
+}));
 
-// Middlewares globales base
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Rate Limiting Middleware (Global)
+app.use("/api", globalLimiter); // Aplica limitación de tasa a todas las rutas bajo /api
+
+// Parcheo contra ataques de polución de parámetros y carga útil masiva
+app.use(express.json({ limit: '10kb' })); // Rechaza JSON mayores a 10kb (previene saturación de memoria)
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Configuración CORS
 const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
 app.use(cors({
   origin: corsOrigin,
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
 }));
 
 // Inyectar correlación antes que cualquier log

@@ -31,6 +31,14 @@ apiClient.interceptors.response.use(
       useAuthStore.getState().logout();
       window.location.href = '/login'; // Redirección forzada
     }
+
+    // Intercepción de Rate Limiting (429)
+    if (error.response?.status === 429) {
+      console.warn('[Security]: Rate limit exceeded. Throttling requests.');
+      // Opcional: Podrías disparar un evento global para mostrar un Toast en la UI
+      // alert('Estás haciendo peticiones muy rápido. Por favor, espera un momento.');
+    }
+
     return Promise.reject(error);
   }
 );
