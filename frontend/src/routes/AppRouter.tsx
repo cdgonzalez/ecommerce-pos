@@ -22,6 +22,7 @@ import AdminDashboard from "../features/admin/AdminDashboard";
 import ReportsView from "../features/admin/ReportsView";
 import AuditLogsView from "../features/admin/AuditLogsView";
 import AdminLayout from "../layouts/AdminLayout";
+import CategoriesList from "../features/admin/CategoriesList";
 
 const router = createBrowserRouter([
   {
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
           { index: true, element: <AdminDashboard /> },
           { path: "users", element: <UsersList /> },
           { path: "inventory", element: <InventoryList /> },
+          { path: "categories", element: <CategoriesList /> },
           { path: "customers", element: <CustomersList /> },
           { path: "transactions", element: <TransactionsHistory /> },
           { path: "reports", element: <ReportsView /> },

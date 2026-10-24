@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, Package, Contact, 
-  Receipt, BarChart3, ShieldAlert, LogOut, Store 
+  Receipt, BarChart3, ShieldAlert, LogOut, Store, Tag 
 } from 'lucide-react';
 import { useAuthStore } from '../store/auth.store';
 
@@ -13,6 +13,7 @@ const AdminLayout: React.FC = () => {
     { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
     { to: '/admin/transactions', icon: Receipt, label: 'Transactions' },
     { to: '/admin/inventory', icon: Package, label: 'Inventory' },
+    { to: '/admin/categories', icon: Tag, label: 'Categories' },
     { to: '/admin/customers', icon: Contact, label: 'Customers' },
     { to: '/admin/users', icon: Users, label: 'Users & Roles' },
     { to: '/admin/reports', icon: BarChart3, label: 'Reports' },

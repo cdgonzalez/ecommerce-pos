@@ -10,6 +10,11 @@ interface InventoryItem {
   product: { name: string; sku: string; price: string };
 }
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 interface AdjustModalState {
   isOpen: boolean;
   productId: string;
@@ -19,10 +24,11 @@ interface AdjustModalState {
 
 const InventoryList: React.FC = () => {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterLowStock, setFilterLowStock] = useState(false);
 
-  // Modal State for stock adjustments
+  // Adjust Stock Modal State
   const [modal, setModal] = useState<AdjustModalState>({
     isOpen: false,
     productId: '',
@@ -31,6 +37,17 @@ const InventoryList: React.FC = () => {
   });
   const [quantity, setQuantity] = useState<number>(1);
   const [reason, setReason] = useState<string>('');
+  
+  // Add Product Modal State
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [productForm, setProductForm] = useState({
+    name: '',
+    description: '',
+    sku: '',
+    price: '',
+    categoryId: ''
+  });
+
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -47,8 +64,18 @@ const InventoryList: React.FC = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await apiClient.get('/catalog/categories');
+      setCategories(response.data.data);
+    } catch (error) {
+      console.error("Error fetching categories", error);
+    }
+  };
+
   useEffect(() => {
     fetchInventory();
+    fetchCategories();
   }, [filterLowStock]);
 
   const openAdjustModal = (productId: string, productName: string, type: 'IN' | 'OUT') => {
@@ -93,6 +120,33 @@ const InventoryList: React.FC = () => {
     }
   };
 
+  const handleProductInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setProductForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCreateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSubmitting(true);
+      setErrorMessage(null);
+      
+      const payload = {
+        ...productForm,
+        price: parseFloat(productForm.price)
+      };
+
+      await apiClient.post('/catalog/products', payload);
+      setIsProductModalOpen(false);
+      setProductForm({ name: '', description: '', sku: '', price: '', categoryId: '' });
+      fetchInventory(); // Refresh inventory list to show new product
+    } catch (error: any) {
+      setErrorMessage(error.response?.data?.message || 'Error creating product');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) return <div className="p-8 text-center text-gray-500">Loading inventory...</div>;
 
   return (
@@ -105,15 +159,26 @@ const InventoryList: React.FC = () => {
           </h1>
           <p className="text-gray-500 text-sm mt-1">Monitor stock levels and register movements.</p>
         </div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 bg-white px-4 py-2 border border-gray-200 rounded-md shadow-sm cursor-pointer hover:bg-gray-50">
-          <input 
-            type="checkbox" 
-            checked={filterLowStock}
-            onChange={(e) => setFilterLowStock(e.target.checked)}
-            className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
-          />
-          Show Low Stock Only
-        </label>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700 bg-white px-4 py-2 border border-gray-200 rounded-md shadow-sm cursor-pointer hover:bg-gray-50">
+            <input 
+              type="checkbox" 
+              checked={filterLowStock}
+              onChange={(e) => setFilterLowStock(e.target.checked)}
+              className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
+            />
+            Show Low Stock Only
+          </label>
+          <button 
+            onClick={() => {
+              setIsProductModalOpen(true);
+              setErrorMessage(null);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <Plus className="w-4 h-4" /> Add Product
+          </button>
+        </div>
       </div>
 
       <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
@@ -263,6 +328,125 @@ const InventoryList: React.FC = () => {
                   } disabled:opacity-50`}
                 >
                   {submitting ? 'Processing...' : modal.type === 'IN' ? 'Confirm Inbound' : 'Confirm Outbound'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add New Product Modal */}
+      {isProductModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative border border-gray-100 animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setIsProductModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Package className="w-5 h-5 text-blue-600" />
+              Add New Product
+            </h3>
+
+            {errorMessage && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-600">
+                {errorMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateProduct} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={productForm.name}
+                  onChange={handleProductInputChange}
+                  required
+                  minLength={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                  placeholder="E.g. Wireless Mouse"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={productForm.description}
+                  onChange={handleProductInputChange}
+                  required
+                  minLength={10}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 resize-none h-20"
+                  placeholder="Product description..."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">SKU</label>
+                  <input
+                    type="text"
+                    name="sku"
+                    value={productForm.sku}
+                    onChange={handleProductInputChange}
+                    required
+                    minLength={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    placeholder="WM-001"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                  <input
+                    type="number"
+                    name="price"
+                    step="0.01"
+                    min="0.01"
+                    value={productForm.price}
+                    onChange={handleProductInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900"
+                    placeholder="29.99"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select
+                  name="categoryId"
+                  value={productForm.categoryId}
+                  onChange={handleProductInputChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-900 bg-white"
+                >
+                  <option value="" disabled>Select a category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsProductModalOpen(false)}
+                  disabled={submitting}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                >
+                  {submitting ? 'Adding...' : 'Add Product'}
                 </button>
               </div>
             </form>
