@@ -1,14 +1,19 @@
 import prisma from '../../core/database/prisma.client';
+import redisClient from '../../core/cache/redis.client';
+import logger from '../../core/utils/logger';
 import { AppError } from '../../core/utils/AppError';
 import { CreateSaleDTO } from './sales.schema';
 
 export class SalesService {
   async processSale(cashierId: string, data: CreateSaleDTO) {
-    return prisma.$transaction(async (tx) => {
+    // 1. Ordenar items por productId para prevenir deadlocks en transacciones concurrentes
+    const sortedItems = [...data.items].sort((a, b) => a.productId.localeCompare(b.productId));
+
+    const result = await prisma.$transaction(async (tx) => {
       let subtotal = 0;
       const saleItemsData = [];
 
-      for (const item of data.items) {
+      for (const item of sortedItems) {
         const product = await tx.product.findUnique({
           where: { id: item.productId },
           include: { inventory: true }
@@ -18,17 +23,24 @@ export class SalesService {
           throw new AppError(`Product ${item.productId} is unavailable`, 400);
         }
 
-        if (!product.inventory || product.inventory.quantity < item.quantity) {
-          throw new AppError(`Insufficient stock for ${product.name}`, 400);
+        if (!product.inventory) {
+          throw new AppError(`No inventory record found for ${product.name}`, 400);
         }
 
-        const updatedInventory = await tx.inventory.update({
-          where: { productId: product.id },
-          data: { quantity: { decrement: item.quantity } }
+        // Decremento condicional atómico en base de datos:
+        // Solo actualiza si la cantidad disponible es mayor o igual a la solicitada
+        const updateResult = await tx.inventory.updateMany({
+          where: {
+            productId: product.id,
+            quantity: { gte: item.quantity }
+          },
+          data: {
+            quantity: { decrement: item.quantity }
+          }
         });
 
-        if (updatedInventory.quantity < 0) {
-          throw new AppError(`Concurrency error: Insufficient stock for ${product.name}`, 409);
+        if (updateResult.count === 0) {
+          throw new AppError(`Insufficient stock for ${product.name}. Requested: ${item.quantity}`, 400);
         }
 
         await tx.stockMovement.create({
@@ -87,6 +99,18 @@ export class SalesService {
         include: { items: true, customer: true, payments: true }
       });
     });
+
+    // 2. Invalidar caché del catálogo tras confirmar el commit de la venta
+    try {
+      if (redisClient.isOpen) {
+        const keys = await redisClient.keys('catalog:products:*');
+        if (keys.length > 0) await redisClient.del(keys);
+      }
+    } catch (cacheErr) {
+      logger.warn('Failed to invalidate catalog cache after sale:', cacheErr);
+    }
+
+    return result;
   }
 
   async getSales(limit: number = 50) {

@@ -1,5 +1,6 @@
 import prisma from '../../core/database/prisma.client';
 import logger from '../../core/utils/logger';
+import { buildPaginationMeta } from '../../core/utils/pagination';
 
 interface CreateAuditLogDTO {
   userId?: string;
@@ -30,14 +31,27 @@ export class AuditService {
     }
   }
 
-  async getAuditLogs(limit: number = 100) {
-    return prisma.auditLog.findMany({
-      take: limit,
-      include: {
-        user: { select: { name: true, email: true } }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+  async getAuditLogs(params: { page?: number; limit?: number } = {}) {
+    const page = Math.max(1, params.page || 1);
+    const limit = Math.min(100, Math.max(1, params.limit || 50));
+    const skip = (page - 1) * limit;
+
+    const [total, logs] = await Promise.all([
+      prisma.auditLog.count(),
+      prisma.auditLog.findMany({
+        skip,
+        take: limit,
+        include: {
+          user: { select: { name: true, email: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
+
+    return {
+      logs,
+      pagination: buildPaginationMeta(total, page, limit)
+    };
   }
 }
 

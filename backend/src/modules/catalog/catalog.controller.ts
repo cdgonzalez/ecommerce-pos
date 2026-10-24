@@ -25,8 +25,8 @@ export const createCategory = async (req: Request, res: Response, next: NextFunc
 // Products
 export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const products = await catalogService.getProducts(req.query);
-    res.status(200).json({ status: 'success', data: products });
+    const { products, pagination } = await catalogService.getProducts(req.query);
+    res.status(200).json({ status: 'success', data: products, pagination });
   } catch (error) {
     next(error);
   }

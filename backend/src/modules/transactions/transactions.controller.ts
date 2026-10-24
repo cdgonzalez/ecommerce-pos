@@ -5,9 +5,10 @@ const transactionsService = new TransactionsService();
 
 export const getHistory = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const limit = parseInt(req.query.limit as string) || 50;
-    const history = await transactionsService.getUnifiedHistory(limit);
-    res.status(200).json({ status: 'success', data: history });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const { transactions, pagination } = await transactionsService.getUnifiedHistory({ page, limit });
+    res.status(200).json({ status: 'success', data: transactions, pagination });
   } catch (error) {
     next(error);
   }

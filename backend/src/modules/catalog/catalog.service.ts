@@ -2,6 +2,7 @@ import slugify from 'slugify';
 import prisma from '../../core/database/prisma.client';
 import redisClient from '../../core/cache/redis.client';
 import { AppError } from '../../core/utils/AppError';
+import { buildPaginationMeta } from '../../core/utils/pagination';
 import { CreateCategoryDTO, CreateProductDTO } from './catalog.schema';
 
 export class CatalogService {
@@ -27,14 +28,24 @@ export class CatalogService {
     return category;
   }
 
-  async getProducts(queryParams: { search?: string; category?: string; status?: string }) {
-    // Definir llave de caché combinando los parámetros de búsqueda
-    const cacheKey = `catalog:products:${JSON.stringify(queryParams)}`;
-    
+  async getProducts(queryParams: { search?: string; category?: string; status?: string; page?: string | number; limit?: string | number }) {
+    const page = Math.max(1, Number(queryParams.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(queryParams.limit) || 20));
+    const skip = (page - 1) * limit;
+
+    const normalizedParams = {
+      search: queryParams.search || '',
+      category: queryParams.category || '',
+      status: queryParams.status || 'ACTIVE',
+      page,
+      limit
+    };
+
+    const cacheKey = `catalog:products:${JSON.stringify(normalizedParams)}`;
     const cached = await redisClient.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
-    const { search, category, status = 'ACTIVE' } = queryParams;
+    const { search, category, status } = normalizedParams;
     const whereClause: any = { status };
 
     if (search) {
@@ -46,14 +57,24 @@ export class CatalogService {
     }
     if (category) whereClause.category = { slug: category };
 
-    const products = await prisma.product.findMany({
-      where: whereClause,
-      include: { category: { select: { name: true, slug: true } }, brand: { select: { name: true } } },
-      orderBy: { createdAt: 'desc' }
-    });
+    const [total, products] = await Promise.all([
+      prisma.product.count({ where: whereClause }),
+      prisma.product.findMany({
+        where: whereClause,
+        include: { category: { select: { name: true, slug: true } }, brand: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      })
+    ]);
 
-    await redisClient.setEx(cacheKey, 300, JSON.stringify(products)); // 5 minutos de caché
-    return products;
+    const result = {
+      products,
+      pagination: buildPaginationMeta(total, page, limit)
+    };
+
+    await redisClient.setEx(cacheKey, 300, JSON.stringify(result)); // 5 minutos de caché
+    return result;
   }
 
   async createProduct(data: CreateProductDTO) {

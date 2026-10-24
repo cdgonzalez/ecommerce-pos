@@ -1,18 +1,26 @@
 import prisma from '../../core/database/prisma.client';
 import { AppError } from '../../core/utils/AppError';
+import { buildPaginationMeta } from '../../core/utils/pagination';
 import { ProcessRefundDTO } from './transactions.schema';
 
 export class TransactionsService {
-  async getUnifiedHistory(limit: number = 50) {
-    // 1. Ejecutar consultas en paralelo para E-Commerce y POS
-    const [orders, sales] = await Promise.all([
+  async getUnifiedHistory(params: { page?: number; limit?: number } = {}) {
+    const page = Math.max(1, params.page || 1);
+    const limit = Math.min(100, Math.max(1, params.limit || 20));
+    const skip = (page - 1) * limit;
+    const fetchCount = skip + limit;
+
+    // 1. Ejecutar consultas en paralelo para conteo y obtención de órdenes y ventas
+    const [totalOrders, totalSales, orders, sales] = await Promise.all([
+      prisma.order.count(),
+      prisma.sale.count(),
       prisma.order.findMany({
-        take: limit,
+        take: fetchCount,
         include: { user: { select: { name: true } }, payments: true },
         orderBy: { createdAt: 'desc' }
       }),
       prisma.sale.findMany({
-        take: limit,
+        take: fetchCount,
         include: { customer: { select: { firstName: true, lastName: true } }, payments: true },
         orderBy: { createdAt: 'desc' }
       })
@@ -22,7 +30,7 @@ export class TransactionsService {
     const unifiedTransactions = [
       ...orders.map(o => ({
         id: o.id,
-        type: 'ORDER',
+        type: 'ORDER' as const,
         clientName: o.user.name,
         total: o.total,
         status: o.status,
@@ -31,7 +39,7 @@ export class TransactionsService {
       })),
       ...sales.map(s => ({
         id: s.id,
-        type: 'SALE',
+        type: 'SALE' as const,
         clientName: s.customer ? `${s.customer.firstName} ${s.customer.lastName}` : 'Walk-in Customer',
         total: s.total,
         status: s.status,
@@ -40,8 +48,15 @@ export class TransactionsService {
       }))
     ];
 
-    // 3. Ordenar cronológicamente en memoria
-    return unifiedTransactions.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, limit);
+    // 3. Ordenar cronológicamente y aplicar paginación exacta (skip y limit)
+    const sorted = unifiedTransactions.sort((a, b) => b.date.getTime() - a.date.getTime());
+    const paginatedItems = sorted.slice(skip, skip + limit);
+    const total = totalOrders + totalSales;
+
+    return {
+      transactions: paginatedItems,
+      pagination: buildPaginationMeta(total, page, limit)
+    };
   }
 
   async processRefund(adminId: string, data: ProcessRefundDTO) {
