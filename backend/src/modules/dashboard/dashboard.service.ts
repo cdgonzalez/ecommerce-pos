@@ -34,7 +34,7 @@ export class DashboardService {
       // Alertas de inventario utilizando raw query para comparar columnas dinámicamente
       prisma.$queryRaw<{count: bigint}[]>`SELECT COUNT(*) FROM "inventories" WHERE "quantity" <= "minStock"`,
       // Últimas 5 transacciones globales
-      this.transactionsService.getUnifiedHistory(5)
+      this.transactionsService.getUnifiedHistory({ limit: 5 })
     ]);
 
     const orderRevenue = Number(ordersAgg._sum.total || 0);

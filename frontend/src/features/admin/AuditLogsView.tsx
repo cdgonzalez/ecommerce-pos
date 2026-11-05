@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Activity, ShieldAlert, User, Database, Search } from 'lucide-react';
+import { Activity, ShieldAlert, Database, Search } from 'lucide-react';
 import apiClient from '../../services/api/axios.client';
 
 interface AuditLog {

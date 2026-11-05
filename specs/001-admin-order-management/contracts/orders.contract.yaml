@@ -1,0 +1,276 @@
+openapi: 3.0.3
+info:
+  title: Orders & Fulfillment Management API
+  version: 1.0.0
+  description: Endpoints for administrator order dashboard, fulfillment lifecycle progression, tracking dispatch, and atomic order cancellation with inventory restitution.
+
+paths:
+  /api/v1/orders:
+    get:
+      summary: List all orders with pagination and filters (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED]
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated list of orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrderSummary'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationMeta'
+
+  /api/v1/orders/{id}:
+    get:
+      summary: Retrieve complete order details by ID (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed order object with line items and payments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/OrderDetail'
+        '404':
+          description: Order not found
+
+  /api/v1/orders/{id}/status:
+    patch:
+      summary: Update order fulfillment status (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [CONFIRMED, PROCESSING, SHIPPED, DELIVERED]
+                carrier:
+                  type: string
+                  example: DHL Express
+                trackingNumber:
+                  type: string
+                  example: DHL-948271048
+      responses:
+        '200':
+          description: Status updated successfully
+        '400':
+          description: Invalid transition or missing tracking details
+        '404':
+          description: Order not found
+
+  /api/v1/orders/{id}/cancel:
+    post:
+      summary: Cancel unfulfilled order and restock items atomically (Admin)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cancellationReason
+              properties:
+                cancellationReason:
+                  type: string
+                  minLength: 5
+                  example: Buyer requested cancellation prior to parcel dispatch
+      responses:
+        '200':
+          description: Order cancelled and stock restored successfully
+        '400':
+          description: Cannot cancel shipped or delivered order
+        '404':
+          description: Order not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    PaginationMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+        totalPages:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPrevPage:
+          type: boolean
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        productName:
+          type: string
+        sku:
+          type: string
+        unitPrice:
+          type: number
+        quantity:
+          type: integer
+        totalPrice:
+          type: number
+
+    PaymentSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        method:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+        reference:
+          type: string
+
+    OrderSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        total:
+          type: number
+        createdAt:
+          type: string
+        user:
+          type: object
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentSummary'
+
+    OrderDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        subtotal:
+          type: number
+        taxes:
+          type: number
+        total:
+          type: number
+        shippingAddress:
+          type: string
+        carrier:
+          type: string
+          nullable: true
+        trackingNumber:
+          type: string
+          nullable: true
+        cancellationReason:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        user:
+          type: object
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentSummary'
+
