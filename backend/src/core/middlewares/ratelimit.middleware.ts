@@ -9,6 +9,7 @@ export const globalLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again in 15 minutes',
   standardHeaders: true, // Retorna los límites en las cabeceras `RateLimit-*`
   legacyHeaders: false, // Deshabilita las cabeceras `X-RateLimit-*`
+  skip: () => process.env.NODE_ENV === 'test', // Omitir durante pruebas automatizadas
   handler: (_req: Request, _res: Response, next: NextFunction, options) => {
     next(new AppError(options.message, options.statusCode));
   },
@@ -21,6 +22,7 @@ export const authLimiter = rateLimit({
   message: 'Too many login attempts from this IP, please try again after an hour',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test', // Omitir durante pruebas automatizadas
   handler: (_req: Request, _res: Response, next: NextFunction, options) => {
     next(new AppError(options.message, options.statusCode));
   },

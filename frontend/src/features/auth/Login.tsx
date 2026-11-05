@@ -20,9 +20,9 @@ const Login: React.FC = () => {
 
     try {
       const response = await apiClient.post('/auth/login', { email, password });
-      const { user, accessToken } = response.data.data;
+      const { user, accessToken, refreshToken } = response.data.data;
       
-      setLogin(user, accessToken);
+      setLogin(user, accessToken, refreshToken);
       
       // Enrutamiento Inteligente Basado en Roles
       const userRoles = user.roles || [];

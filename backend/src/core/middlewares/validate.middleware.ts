@@ -2,10 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import { ZodType, ZodError } from 'zod';
 import { AppError } from '../utils/AppError';
 
-export const validateRequest = (schema: ZodType) => {
+export const validateRequest = (schema: ZodType, target: 'body' | 'query' | 'params' = 'body') => {
   return async (req: Request, _res: Response, next: NextFunction) => {
     try {
-      await schema.parseAsync(req.body);
+      const parsed = await schema.parseAsync(req[target]);
+      if (target === 'body') {
+        req.body = parsed;
+      } else if (target === 'query') {
+        Object.assign(req.query, parsed);
+      }
       next();
     } catch (error) {
       if (error instanceof ZodError) {
