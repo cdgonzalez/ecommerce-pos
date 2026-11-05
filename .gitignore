@@ -1,7 +1,62 @@
-node_modules/
-dist
-build
+# ==========================================
+# Secretos y Variables de Entorno
+# ==========================================
 .env
-package-lock.json
-/.agents/
-/.vscode/
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+
+# ==========================================
+# Dependencias de Node
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==========================================
+# Agentes de IA y Configuraciones de Entorno
+# ==========================================
+.agents/
+.claude/
+.specify/
+
+# ==========================================
+# Salidas y Artefactos de Graphify
+# ==========================================
+graphify-out/
+.graphify*
+*.graph.json
+*.graph.html
+*.graph.svg
+
+# ==========================================
+# Compilación y Salidas de TypeScript
+# ==========================================
+dist/
+build/
+*.tsbuildinfo
+
+# ==========================================
+# Cobertura de Pruebas y Reportes (Jest, Stryker, Cucumber)
+# ==========================================
+coverage/
+.stryker-tmp/
+reports/
+cucumber-report.html
+
+# ==========================================
+# Archivos de Sistema Operativo e IDEs
+# ==========================================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

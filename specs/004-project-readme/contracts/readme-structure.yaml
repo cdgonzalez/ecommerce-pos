@@ -1,0 +1,98 @@
+# Contract Specification: README.md Structure and Content Verification
+spec_version: "1.0.0"
+document_target: "README.md"
+language: "en-US"
+format: "GitHub Flavored Markdown (GFM)"
+
+sections:
+  - id: "header"
+    heading: "# EcoPOS — Unified E-Commerce & In-Store Point of Sale Engine"
+    required_elements:
+      - "Shields.io badges (Node.js, TypeScript, React, Prisma, PostgreSQL, Redis, Vitest, License)"
+      - "System executive tagline"
+      - "Key capabilities bullet points"
+    anchors: ["#table-of-contents"]
+
+  - id: "toc"
+    heading: "## Table of Contents"
+    required_links:
+      - "#system-architecture--design-principles"
+      - "#key-features--capabilities"
+      - "#technology-stack"
+      - "#project-structure"
+      - "#getting-started--local-setup"
+      - "#api-reference-overview"
+      - "#testing--quality-assurance"
+      - "#roadmap--governance"
+      - "#license"
+
+  - id: "architecture"
+    heading: "## System Architecture & Design Principles"
+    required_subsections:
+      - "High-Level Architecture Diagram (Mermaid or ASCII)"
+      - "Principle I: Dual-Channel Unified Commerce"
+      - "Principle II: ACID Consistency & Zero-Overselling Invariant"
+      - "Principle III: Immutable Snapshots & Universal Auditability"
+      - "Principle IV: Contract Validation & Granular RBAC"
+      - "Principle V: Multi-Tier Redis Caching with Deterministic Invalidation"
+
+  - id: "features"
+    heading: "## Key Features & Capabilities"
+    sub_modules:
+      - "B2C Digital Storefront"
+      - "In-Store Point of Sale (POS) Terminal"
+      - "Cash Register Shift Management & Corte Z Reconciliation"
+      - "Administrative Order Fulfillment Pipeline"
+      - "Centralized Back-Office & Auditing"
+
+  - id: "tech_stack"
+    heading: "## Technology Stack"
+    required_tables:
+      - columns: ["Layer", "Technologies", "Purpose"]
+
+  - id: "project_structure"
+    heading: "## Project Structure"
+    format: "Fenced code block with tree notation"
+    must_contain:
+      - "backend/src/modules"
+      - "frontend/src/features"
+      - "specs/"
+
+  - id: "quickstart"
+    heading: "## Getting Started & Local Setup"
+    subsections:
+      - "Prerequisites"
+      - "Clone & Install"
+      - "Environment Configuration"
+      - "Database Setup & Migrations"
+      - "Running in Development"
+
+  - id: "api_reference"
+    heading: "## API Reference Overview"
+    table_columns: ["Method", "Endpoint", "Auth / Permission", "Description"]
+    domains_covered:
+      - "Authentication & Session Refresh"
+      - "POS Cash Shifts & Movements"
+      - "Sales & POS Register"
+      - "Orders & Fulfillment"
+      - "Inventory & Stock Movements"
+      - "Catalog & Categories"
+      - "Unified Transactions & Refunds"
+      - "Audit Logging"
+
+  - id: "testing"
+    heading: "## Testing & Quality Assurance"
+    verification_commands:
+      - "npm --prefix backend test"
+      - "npm --prefix backend run build"
+      - "npm --prefix frontend run build"
+    expected_results:
+      - "76/76 passing backend tests"
+      - "0 TypeScript compilation errors"
+
+  - id: "roadmap"
+    heading: "## Roadmap & Governance"
+    milestones:
+      - "Delivered (001 Admin Orders, 002 Auth Refresh, 003 POS Cash Shifts)"
+      - "Planned (Full Catalog Media, POS Quick-Customer & Receipts, B2C Self-Service)"
+
