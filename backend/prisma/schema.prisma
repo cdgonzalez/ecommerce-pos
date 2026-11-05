@@ -7,18 +7,20 @@ datasource db {
 }
 
 model User {
-  id           String     @id @default(uuid())
-  email        String     @unique
+  id           String         @id @default(uuid())
+  email        String         @unique
   password     String
   name         String
   refreshToken String?
-  isActive     Boolean    @default(true)
+  isActive     Boolean        @default(true)
   roles        UserRole[]
-  customer     Customer? // <--- RELACIÓN AGREGADA
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  customer     Customer?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   orders       Order[]
   sales        Sale[]
+  shifts       Shift[]
+  cashMovements CashMovement[]
   auditLogs    AuditLog[]
 
   @@map("users")
@@ -170,18 +172,21 @@ model Address {
 }
 
 model Order {
-  id              String      @id @default(uuid())
-  userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  status          String      @default("PENDING") // PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED
-  subtotal        Decimal     @db.Decimal(10, 2)
-  taxes           Decimal     @db.Decimal(10, 2)
-  total           Decimal     @db.Decimal(10, 2)
-  shippingAddress String
-  items           OrderItem[]
-  payments        Payment[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                 String      @id @default(uuid())
+  userId             String
+  user               User        @relation(fields: [userId], references: [id])
+  status             String      @default("PENDING") // PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+  subtotal           Decimal     @db.Decimal(10, 2)
+  taxes              Decimal     @db.Decimal(10, 2)
+  total              Decimal     @db.Decimal(10, 2)
+  shippingAddress    String
+  carrier            String?
+  trackingNumber     String?
+  cancellationReason String?
+  items              OrderItem[]
+  payments           Payment[]
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
 
   @@map("orders")
 }
@@ -207,6 +212,8 @@ model Sale {
   cashier    User       @relation(fields: [cashierId], references: [id])
   customerId String?
   customer   Customer?  @relation(fields: [customerId], references: [id])
+  shiftId    String?
+  shift      Shift?     @relation(fields: [shiftId], references: [id])
   status     String     @default("COMPLETED") // COMPLETED, REFUNDED
   subtotal   Decimal    @db.Decimal(10, 2)
   taxes      Decimal    @db.Decimal(10, 2)
@@ -216,6 +223,7 @@ model Sale {
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
+  @@index([shiftId])
   @@map("sales")
 }
 
@@ -250,6 +258,42 @@ model Payment {
   updatedAt DateTime @updatedAt
 
   @@map("payments")
+}
+
+model Shift {
+  id           String         @id @default(uuid())
+  cashierId    String
+  cashier      User           @relation(fields: [cashierId], references: [id])
+  status       String         @default("OPEN") // OPEN, CLOSED
+  initialCash  Decimal        @db.Decimal(10, 2)
+  expectedCash Decimal?       @db.Decimal(10, 2)
+  countedCash  Decimal?       @db.Decimal(10, 2)
+  variance     Decimal?       @db.Decimal(10, 2)
+  notes        String?
+  openedAt     DateTime       @default(now())
+  closedAt     DateTime?
+  sales        Sale[]
+  movements    CashMovement[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([cashierId, status])
+  @@map("shifts")
+}
+
+model CashMovement {
+  id        String   @id @default(uuid())
+  shiftId   String
+  shift     Shift    @relation(fields: [shiftId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String   // CASH_IN, CASH_OUT
+  amount    Decimal  @db.Decimal(10, 2)
+  reason    String
+  createdAt DateTime @default(now())
+
+  @@index([shiftId])
+  @@map("cash_movements")
 }
 
 model AuditLog {

@@ -1,7 +1,6 @@
 import {
   createBrowserRouter,
   RouterProvider,
-  Navigate,
 } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/Home";
@@ -23,6 +22,8 @@ import ReportsView from "../features/admin/ReportsView";
 import AuditLogsView from "../features/admin/AuditLogsView";
 import AdminLayout from "../layouts/AdminLayout";
 import CategoriesList from "../features/admin/CategoriesList";
+import OrdersList from "../features/admin/OrdersList";
+import { ShiftsManagement } from "../features/admin/ShiftsManagement";
 
 const router = createBrowserRouter([
   {
@@ -59,11 +60,13 @@ const router = createBrowserRouter([
         element: <AdminLayout />,
         children: [
           { index: true, element: <AdminDashboard /> },
+          { path: "orders", element: <OrdersList /> },
           { path: "users", element: <UsersList /> },
           { path: "inventory", element: <InventoryList /> },
           { path: "categories", element: <CategoriesList /> },
           { path: "customers", element: <CustomersList /> },
           { path: "transactions", element: <TransactionsHistory /> },
+          { path: "shifts", element: <ShiftsManagement /> },
           { path: "reports", element: <ReportsView /> },
           { path: "audit", element: <AuditLogsView /> },
         ],

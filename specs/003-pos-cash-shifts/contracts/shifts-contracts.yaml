@@ -1,0 +1,182 @@
+openapi: 3.0.3
+info:
+  title: POS Cash Shifts & Corte Z API
+  version: 1.0.0
+  description: Endpoints for opening, managing, moving cash in/out, closing, and reporting POS cash register shifts.
+paths:
+  /api/v1/shifts/open:
+    post:
+      summary: Open a new cash drawer shift
+      tags:
+        - Shifts
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - initialCash
+              properties:
+                initialCash:
+                  type: number
+                  minimum: 0
+                  description: Starting cash amount in drawer (fondo inicial)
+                  example: 50.00
+      responses:
+        '201':
+          description: Shift opened successfully
+        '400':
+          description: Validation error
+        '409':
+          description: Cashier already has an active open shift
+
+  /api/v1/shifts/current:
+    get:
+      summary: Retrieve the currently active open shift for the authenticated cashier
+      tags:
+        - Shifts
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Active shift data or null if closed
+        '401':
+          description: Unauthorized
+
+  /api/v1/shifts/{id}/movements:
+    post:
+      summary: Record a mid-shift cash drop or cash injection
+      tags:
+        - Shifts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - amount
+                - reason
+              properties:
+                type:
+                  type: string
+                  enum: [CASH_IN, CASH_OUT]
+                  example: CASH_OUT
+                amount:
+                  type: number
+                  minimum: 0.01
+                  example: 20.00
+                reason:
+                  type: string
+                  minLength: 3
+                  example: Partial cash drop to store safe
+      responses:
+        '201':
+          description: Cash movement recorded successfully
+        '400':
+          description: Invalid movement or shift not open
+
+  /api/v1/shifts/{id}/close:
+    post:
+      summary: Close shift and reconcile cash (Corte Z)
+      tags:
+        - Shifts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - countedCash
+              properties:
+                countedCash:
+                  type: number
+                  minimum: 0
+                  description: Physical cash counted in drawer (Arqueo)
+                  example: 185.50
+                notes:
+                  type: string
+                  description: Optional explanation for variance or shift notes
+                  example: Shift balanced without issues
+      responses:
+        '200':
+          description: Shift closed, Corte Z generated and variance stored
+        '400':
+          description: Invalid request or shift already closed
+
+  /api/v1/shifts:
+    get:
+      summary: List historical shifts with filters (Admin / Supervisor)
+      tags:
+        - Shifts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: cashierId
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [OPEN, CLOSED]
+      responses:
+        '200':
+          description: Paginated list of shifts
+
+  /api/v1/shifts/{id}/summary:
+    get:
+      summary: Retrieve complete Corte Z summary ticket for printing/audit
+      tags:
+        - Shifts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Complete Corte Z financial breakdown
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+

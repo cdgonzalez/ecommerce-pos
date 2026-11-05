@@ -10,6 +10,15 @@ export class SalesService {
     const sortedItems = [...data.items].sort((a, b) => a.productId.localeCompare(b.productId));
 
     const result = await prisma.$transaction(async (tx) => {
+      // 0. Validar turno activo de caja para el cajero
+      const activeShift = await tx.shift.findFirst({
+        where: { cashierId, status: 'OPEN' }
+      });
+
+      if (!activeShift) {
+        throw new AppError('No active open shift found for cashier. Open a shift before processing sales.', 400);
+      }
+
       let subtotal = 0;
       const saleItemsData = [];
 
@@ -73,6 +82,7 @@ export class SalesService {
       const sale = await tx.sale.create({
         data: {
           cashierId,
+          shiftId: activeShift.id,
           customerId: data.customerId,
           subtotal,
           taxes,

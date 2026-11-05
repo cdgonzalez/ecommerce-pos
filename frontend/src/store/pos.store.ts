@@ -14,13 +14,31 @@ interface CustomerBase {
   lastName: string;
 }
 
+export interface ShiftInfo {
+  id: string;
+  cashierId: string;
+  status: 'OPEN' | 'CLOSED';
+  initialCash: number;
+  expectedCash?: number | null;
+  countedCash?: number | null;
+  variance?: number | null;
+  notes?: string | null;
+  openedAt: string;
+  closedAt?: string | null;
+}
+
 interface POSState {
   items: POSItem[];
   customer: CustomerBase | null;
+  activeShift: ShiftInfo | null;
+  shiftLoading: boolean;
   addItem: (item: POSItem) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   setCustomer: (customer: CustomerBase | null) => void;
+  setActiveShift: (shift: ShiftInfo | null) => void;
+  setShiftLoading: (loading: boolean) => void;
+  clearShift: () => void;
   clearTerminal: () => void;
   getSubtotal: () => number;
 }
@@ -28,6 +46,8 @@ interface POSState {
 export const usePOSStore = create<POSState>((set, get) => ({
   items: [],
   customer: null,
+  activeShift: null,
+  shiftLoading: false,
   addItem: (newItem) => {
     const currentItems = get().items;
     const existingItem = currentItems.find((item) => item.productId === newItem.productId);
@@ -53,6 +73,9 @@ export const usePOSStore = create<POSState>((set, get) => ({
     });
   },
   setCustomer: (customer) => set({ customer }),
+  setActiveShift: (activeShift) => set({ activeShift }),
+  setShiftLoading: (shiftLoading) => set({ shiftLoading }),
+  clearShift: () => set({ activeShift: null }),
   clearTerminal: () => set({ items: [], customer: null }),
   getSubtotal: () => get().items.reduce((total, item) => total + (item.price * item.quantity), 0),
 }));

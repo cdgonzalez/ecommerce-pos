@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, Package, Contact, 
-  Receipt, BarChart3, ShieldAlert, LogOut, Store, Tag 
+  Receipt, BarChart3, ShieldAlert, LogOut, Store, Tag, ShoppingBag, Coins 
 } from 'lucide-react';
 import { useAuthStore } from '../store/auth.store';
 
@@ -11,7 +11,9 @@ const AdminLayout: React.FC = () => {
 
   const navItems = [
     { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+    { to: '/admin/orders', icon: ShoppingBag, label: 'Orders' },
     { to: '/admin/transactions', icon: Receipt, label: 'Transactions' },
+    { to: '/admin/shifts', icon: Coins, label: 'Turnos de Caja' },
     { to: '/admin/inventory', icon: Package, label: 'Inventory' },
     { to: '/admin/categories', icon: Tag, label: 'Categories' },
     { to: '/admin/customers', icon: Contact, label: 'Customers' },

@@ -2,7 +2,18 @@ import prisma from '../../core/database/prisma.client';
 import logger from '../../core/utils/logger';
 import { buildPaginationMeta } from '../../core/utils/pagination';
 
-interface CreateAuditLogDTO {
+export const AuditActions = {
+  TOKEN_REFRESH: 'TOKEN_REFRESH',
+  TOKEN_REUSE_DETECTED: 'TOKEN_REUSE_DETECTED',
+  USER_LOGOUT: 'USER_LOGOUT',
+  ORDER_STATUS_UPDATED: 'ORDER_STATUS_UPDATED',
+  ORDER_CANCELLED: 'ORDER_CANCELLED',
+  SHIFT_OPENED: 'SHIFT_OPENED',
+  CASH_MOVEMENT_CREATED: 'CASH_MOVEMENT_CREATED',
+  SHIFT_CLOSED_CORTE_Z: 'SHIFT_CLOSED_CORTE_Z'
+} as const;
+
+export interface CreateAuditLogDTO {
   userId?: string;
   action: string;
   entity: string;

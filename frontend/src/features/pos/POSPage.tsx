@@ -6,7 +6,7 @@ import { usePOSStore } from '../../store/pos.store';
 interface CatalogProduct { id: string; name: string; sku: string; price: string; }
 
 const POSPage: React.FC = () => {
-  const { items, customer, addItem, removeItem, updateQuantity, setCustomer, clearTerminal, getSubtotal } = usePOSStore();
+  const { items, customer, activeShift, addItem, removeItem, updateQuantity, setCustomer, clearTerminal, getSubtotal } = usePOSStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -28,6 +28,10 @@ const POSPage: React.FC = () => {
 
   const handleCharge = async () => {
     if (items.length === 0) return;
+    if (!activeShift) {
+      alert('Debe abrir un turno de caja antes de procesar ventas.');
+      return;
+    }
     setIsProcessing(true);
     
     try {
@@ -134,7 +138,7 @@ const POSPage: React.FC = () => {
             <span>Total</span><span>${total.toFixed(2)}</span>
           </div>
           
-          <button onClick={handleCharge} disabled={items.length === 0 || isProcessing} className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors disabled:bg-gray-300 disabled:text-gray-500 shadow-md">
+          <button onClick={handleCharge} disabled={items.length === 0 || isProcessing || !activeShift} className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition-colors disabled:bg-gray-300 disabled:text-gray-500 shadow-md">
             {isProcessing ? 'Processing...' : `Charge $${total.toFixed(2)}`}
           </button>
         </div>
